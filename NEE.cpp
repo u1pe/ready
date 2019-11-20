@@ -136,26 +136,27 @@ Vec3 radiancenormal(Vec3& col) {
 }
 
 int main() {
-  const int N = 10;
+  const int N = 100;
   Image img(600, 400);
-  PinholeCamera2 cam(Vec3(0, 0, 4), Vec3(0, 0, -1), 1);
+  PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));
   auto mat2 = std::make_shared<Diffuse>(Vec3(0.8, 0.8, 0.2));
   auto mat3 = std::make_shared<Diffuse>(Vec3(0.8, 0.8, 0.8));
-  // auto mat4 = std::make_shared<Mirror>(Vec3(0.2, 0.2, 0.2));
+  auto mat4 = std::make_shared<Diffuse>(Vec3(0.2, 0.2, 0.8));
+  auto mat5 = std::make_shared<Diffuse>(Vec3(0.2, 0.8, 0.2));
   // auto mat5 = std::make_shared<Glass>(1.5);
-  auto light1 = std::make_shared<Light>(Vec3(1, 1, 1));
+  auto light1 = std::make_shared<Light>(Vec3(5, 5, 5));
   auto light2 = std::make_shared<Light>(Vec3(0, 0, 0));
   // auto light3 = std::make_shared<Light>(Vec3(0, 0, 0));
   // auto light3= std::make_shared<Light>(Vec3(5,5,5));
 
   // accel.add(
   // std::make_shared<Cylinder>(Vec3(0, 0, 0), 3, 0.2, -1, mat2, light2));
-  accel.add(std::make_shared<Sphere>(Vec3(0, 3, 0), 1, mat1, light1));
-  accel.add(std::make_shared<Sphere>(Vec3(0, 0, 0), 1, mat3, light2));
+  accel.add(std::make_shared<Sphere>(Vec3(0, 3, 0), 1, mat3, light1));
+  accel.add(std::make_shared<Sphere>(Vec3(0, 0, 0), 1, mat2, light2));
   // accel.add(std::make_shared<Disk>(Vec3(0, 0.2, 0), 3, mat3, light2));
   accel.add(std::make_shared<Sphere>(Vec3(10003, 0, 0), 10000, mat1, light2));
-  accel.add(std::make_shared<Sphere>(Vec3(-10003, 0, 0), 10000, mat2, light2));
+  accel.add(std::make_shared<Sphere>(Vec3(-10003, 0, 0), 10000, mat4, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, 10003, 0), 10000, mat3, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, 0, -10003), 10000, mat3, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, -10001, 0), 10000, mat3,
