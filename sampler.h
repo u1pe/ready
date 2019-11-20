@@ -51,4 +51,11 @@ double fresnel(const Vec3& d, const Vec3& n, double n1, double n2) {
   double f0 = std::pow((n1 - n2) / (n1 + n2), 2.0);
   return f0 + (1 - f0) * std::pow(1.0 - dot(d, n), 5.0);
 }
+
+inline Vec3 sampleSphere() {
+  const float z = 1 - 2 * rnd();
+  const float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+  const float phi = 2 * M_PI * rnd();
+  return Vec3(r * std::cos(phi), z, r * std::sin(phi));
+}
 #endif

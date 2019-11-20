@@ -36,7 +36,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
 
       auto hitMaterial = hit.hitSphere->material;
       auto hitLight = hit.hitSphere->light;
-      // col = col + throughput * hitLight->Le();
+      col = col + throughput * hitLight->Le();
       Vec3 brdf;
       Vec3 wi_local;
       double pdf;
@@ -44,7 +44,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       brdf = hitMaterial->sample(wo_local, wi_local, pdf);
       double cos = cosTheta(wi_local);
       Vec3 wi = localToworld(wi_local, s, t, n);
-      Vec3 a = randomsphere(1, Vec3(0, 3, 0));
+      Vec3 a = sampleSphere() * 1 + Vec3(0, 3, 0);
       Vec3 nee = normalize(a - hit.hitPos);
       double posit = hit.hitPos.x * hit.hitPos.x +
                      (hit.hitPos.y - 3) * (hit.hitPos.y - 3) +
@@ -63,11 +63,12 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
         if (shadow_hit && std::abs(k - m) < 1e-3) {
           double cos2 = std::abs(dot(nee, b));  ///(nee.length()*b.length());
           double pdf_area = 1 / hit2.hitarea;
-          double pdf_solid = (pdf_area * cos2) / (k * k);
-          //   std::cout << pdf_solid << std::endl;
+          double cos3 = std::abs(dot(nee, hit.hitNormal));
+          double pdf_solid = (cos3 * cos2) / (k * k);
+          // std::cout << pdf_solid << std::endl;
           auto hitLight2 = hit2.hitSphere->light;
-
-          col = col + throughput * hitLight2->Le() / pdf_solid;
+          col =
+              col + throughput * brdf * pdf_solid * hitLight2->Le() / pdf_area;
         }
       }
       throughput = throughput * brdf * cos / pdf;
@@ -75,7 +76,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       //+ 0.001 * hit.hitNormal,
       // std::cout<<ray.direction<<std::endl;
     } else {
-      // col = col + throughput * sky.getRadiance(ray);
+      col = col + throughput * sky.getRadiance(ray);
       break;
     }
 
