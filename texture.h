@@ -7,6 +7,7 @@
 class texture {
  public:
   virtual Vec3 getcolor1(double u, double v, const Vec3& p) const = 0;
+  virtual bool Is_bump() const = 0;
 };
 
 class Uniformtexture : public texture {

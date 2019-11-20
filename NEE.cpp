@@ -49,26 +49,27 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       double posit = hit.hitPos.x * hit.hitPos.x +
                      (hit.hitPos.y - 3) * (hit.hitPos.y - 3) +
                      hit.hitPos.z * hit.hitPos.z - 1;
-      Ray shadowray = Ray(hit.hitPos + 0.01 * hit.hitNormal, nee);
+      if (posit > -1e-4) {
+        Ray shadowray = Ray(hit.hitPos + 0.01 * hit.hitNormal, nee);
 
-      Hit hit2;
-      bool shadow_hit = accel.intersect(shadowray, hit2);
+        Hit hit2;
+        bool shadow_hit = accel.intersect(shadowray, hit2);
 
-      Vec3 b = normalize(a - Vec3(0, 3, 0));
-      double k = (a - hit.hitPos).length();
-      double m = (hit2.hitPos - hit.hitPos).length();
-      // std::cout << k - m << std::endl;
+        Vec3 b = normalize(a - Vec3(0, 3, 0));
+        double k = (a - hit.hitPos).length();
+        double m = (hit2.hitPos - hit.hitPos).length();
+        // std::cout << k - m << std::endl;
 
-      if (shadow_hit && std::abs(k - m) < 1e-3) {
-        double cos2 = std::abs(dot(nee, b));  ///(nee.length()*b.length());
-        double pdf_area = 1 / hit2.hitarea;
-        double pdf_solid = (pdf_area * cos2) / (k * k);
-        //   std::cout << pdf_solid << std::endl;
-        auto hitLight2 = hit2.hitSphere->light;
+        if (shadow_hit && std::abs(k - m) < 1e-3) {
+          double cos2 = std::abs(dot(nee, b));  ///(nee.length()*b.length());
+          double pdf_area = 1 / hit2.hitarea;
+          double pdf_solid = (pdf_area * cos2) / (k * k);
+          //   std::cout << pdf_solid << std::endl;
+          auto hitLight2 = hit2.hitSphere->light;
 
-        col = col + throughput * hitLight->Le() / pdf_solid;
+          col = col + throughput * hitLight2->Le() / pdf_solid;
+        }
       }
-
       throughput = throughput * brdf * cos / pdf;
       ray = Ray(hit.hitPos + 0.01 * hit.hitNormal, wi);
       //+ 0.001 * hit.hitNormal,
