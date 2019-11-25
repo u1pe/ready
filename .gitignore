@@ -3,5 +3,6 @@ pictures/
 *.ppm
 path_tracing.cpp
 path_tracing2.cpp
+pathtracing_3.cpp
 a.out
 *.png

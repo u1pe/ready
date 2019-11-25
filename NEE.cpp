@@ -15,7 +15,7 @@
 #include "util.h"
 #include "vec3.h"
 //ガンマ補正
-const int MAX_DEPTH = 500;
+const int MAX_DEPTH = 50;
 const double ROULETTE = 0.99;
 Accel accel;  //グローバルに定義する必要がある
 
@@ -36,7 +36,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
 
       auto hitMaterial = hit.hitSphere->material;
       auto hitLight = hit.hitSphere->light;
-      col = col + throughput * hitLight->Le();
+      //col = col + throughput * hitLight->Le();
       Vec3 brdf;
       Vec3 wi_local;
       double pdf;
@@ -69,6 +69,10 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
           auto hitLight2 = hit2.hitSphere->light;
           col =
               col + throughput * brdf * pdf_solid * hitLight2->Le() / pdf_area;
+          //break;
+        }
+        else{
+          break;
         }
       }
       throughput = throughput * brdf * cos / pdf;
@@ -89,7 +93,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
   return col;
 }
 
-Vec3 radiance(const Ray& init_ray, const Accel& accel, const Sky& sky,
+/*Vec3 radiance(const Ray& init_ray, const Accel& accel, const Sky& sky,
               int depth = 0) {
   Vec3 col;
   Vec3 throughput(1, 1, 1);
@@ -113,6 +117,7 @@ Vec3 radiance(const Ray& init_ray, const Accel& accel, const Sky& sky,
       Vec3 wi = localToworld(wi_local, s, t, n);
       throughput = throughput * brdf * cos / pdf;
       ray = Ray(hit.hitPos + 0.01 * hit.hitNormal, wi);
+
       //+ 0.001 * hit.hitNormal,
       // std::cout<<ray.direction<<std::endl;
     } else {
@@ -133,10 +138,10 @@ Vec3 radiancenormal(Vec3& col) {
   Hit hit;
   Vec3 color = col + (hit.hitNormal + Vec3(1, 1, 1)) * 0.5;
   return color;
-}
+}*/
 
 int main() {
-  const int N = 100;
+  const int N = 200;
   Image img(600, 400);
   PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));
@@ -144,17 +149,11 @@ int main() {
   auto mat3 = std::make_shared<Diffuse>(Vec3(0.8, 0.8, 0.8));
   auto mat4 = std::make_shared<Diffuse>(Vec3(0.2, 0.2, 0.8));
   auto mat5 = std::make_shared<Diffuse>(Vec3(0.2, 0.8, 0.2));
-  // auto mat5 = std::make_shared<Glass>(1.5);
   auto light1 = std::make_shared<Light>(Vec3(5, 5, 5));
   auto light2 = std::make_shared<Light>(Vec3(0, 0, 0));
-  // auto light3 = std::make_shared<Light>(Vec3(0, 0, 0));
-  // auto light3= std::make_shared<Light>(Vec3(5,5,5));
 
-  // accel.add(
-  // std::make_shared<Cylinder>(Vec3(0, 0, 0), 3, 0.2, -1, mat2, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, 3, 0), 1, mat3, light1));
   accel.add(std::make_shared<Sphere>(Vec3(0, 0, 0), 1, mat2, light2));
-  // accel.add(std::make_shared<Disk>(Vec3(0, 0.2, 0), 3, mat3, light2));
   accel.add(std::make_shared<Sphere>(Vec3(10003, 0, 0), 10000, mat1, light2));
   accel.add(std::make_shared<Sphere>(Vec3(-10003, 0, 0), 10000, mat4, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, 10003, 0), 10000, mat3, light2));
@@ -175,7 +174,7 @@ int main() {
         // std::cout << rnd() << std::endl;
         Ray ray = cam.getRay(u, v);
         Vec3 color = radianceNEE(ray, accel, sky);
-        Vec3 color2 = radiancenormal(color);
+        // Vec3 color2 = radiancenormal(color);
 
         img.setPixel(
             i, j,
