@@ -39,6 +39,15 @@ Vec3 operator/(double k, const Vec3& v) {
 Vec3 operator/(const Vec3& v, double k) {
   return Vec3(v.x / k, v.y / k, v.z / k);
 }
+Vec3 operator+=(const Vec3& v1, const Vec3& k) { return v1 + k; }
+
+bool operator==(const Vec3& v1, const Vec3& v2) {
+  if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
+    return true;
+  }
+
+  return false;
+}
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& v) {
   stream << "(" << v.x << "," << v.y << "," << v.z << ")";

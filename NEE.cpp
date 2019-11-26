@@ -15,7 +15,7 @@
 #include "util.h"
 #include "vec3.h"
 //ガンマ補正
-const int MAX_DEPTH = 50;
+const int MAX_DEPTH = 200;
 const double ROULETTE = 0.99;
 Accel accel;  //グローバルに定義する必要がある
 
@@ -36,7 +36,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
 
       auto hitMaterial = hit.hitSphere->material;
       auto hitLight = hit.hitSphere->light;
-      //col = col + throughput * hitLight->Le();
+      col = col + throughput * hitLight->Le();
       Vec3 brdf;
       Vec3 wi_local;
       double pdf;
@@ -46,10 +46,10 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       Vec3 wi = localToworld(wi_local, s, t, n);
       Vec3 a = sampleSphere() * 1 + Vec3(0, 3, 0);
       Vec3 nee = normalize(a - hit.hitPos);
-      double posit = hit.hitPos.x * hit.hitPos.x +
-                     (hit.hitPos.y - 3) * (hit.hitPos.y - 3) +
-                     hit.hitPos.z * hit.hitPos.z - 1;
-      if (posit > -1e-4) {
+      // double posit = hit.hitPos.x * hit.hitPos.x +
+      //              (hit.hitPos.y - 3) * (hit.hitPos.y - 3) +
+      //            hit.hitPos.z * hit.hitPos.z - 1;
+      if (hitLight == nullptr || hitLight->Le() == Vec3(0, 0, 0)) {
         Ray shadowray = Ray(hit.hitPos + 0.01 * hit.hitNormal, nee);
 
         Hit hit2;
@@ -69,9 +69,8 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
           auto hitLight2 = hit2.hitSphere->light;
           col =
               col + throughput * brdf * pdf_solid * hitLight2->Le() / pdf_area;
-          //break;
-        }
-        else{
+          // break;
+        } else {
           break;
         }
       }
@@ -141,7 +140,7 @@ Vec3 radiancenormal(Vec3& col) {
 }*/
 
 int main() {
-  const int N = 200;
+  const int N = 1000;
   Image img(600, 400);
   PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));
