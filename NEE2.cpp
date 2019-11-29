@@ -15,7 +15,7 @@
 #include "util.h"
 #include "vec3.h"
 //ガンマ補正
-const int MAX_DEPTH = 200;
+const int MAX_DEPTH = 100;
 const double ROULETTE = 0.99;
 Accel accel;  //グローバルに定義する必要がある
 
@@ -26,22 +26,34 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
   Vec3 col;
   Vec3 throughput(1, 1, 1);
   Ray ray = init_ray;
-  for (int depth = 0; depth < MAX_DEPTH; depth) {
+  for (int depth = 0; depth < MAX_DEPTH; ++depth) {
+    if (rnd() < ROULETTE) {
+      throughput = throughput / ROULETTE;
+    } else {
+      return col;
+    }
     Hit hit;
     if (accel.intersect(ray, hit)) {  // Diffuse
-      Vec3 n = hit.hitNormal;
+      const auto hitMaterial = hit.hitSphere->material;
+      const auto hitLight = hit.hitSphere->light;
+
+      const Vec3 le = hitLight->Le();
+      if (le != Vec3(0, 0, 0)) {
+        if (depth == 0) {
+          return le;
+        } else {
+          return col;
+        }
+      }
+      const Vec3 n = hit.hitNormal;
       Vec3 s, t;
       orthonormalBasis(n, s, t);
-      Vec3 wo_local = worldTolocal(-1 * ray.direction, s, t, n);
-
-      auto hitMaterial = hit.hitSphere->material;
-      auto hitLight = hit.hitSphere->light;
-      col = col + throughput * hitLight->Le();
-      Vec3 brdf;
+      const Vec3 wo_local = worldTolocal(-1 * ray.direction, s, t, n);
       Vec3 wi_local;
       double pdf;
+      // col = col + throughput * hitLight->Le();
+      Vec3 brdf = hitMaterial->sample(wo_local, wi_local, pdf);
 
-      brdf = hitMaterial->sample(wo_local, wi_local, pdf);
       double cos = cosTheta(wi_local);
       Vec3 wi = localToworld(wi_local, s, t, n);
       Vec3 a = sampleSphere() * 1 + Vec3(0, 3, 0);
@@ -49,44 +61,34 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       // double posit = hit.hitPos.x * hit.hitPos.x +
       //              (hit.hitPos.y - 3) * (hit.hitPos.y - 3) +
       //            hit.hitPos.z * hit.hitPos.z - 1;
-      if (hitLight->Le() == Vec3(0, 0, 0)) {
-        Ray shadowray = Ray(hit.hitPos + 0.01 * hit.hitNormal, nee);
+      if (le == Vec3(0, 0, 0)) {
+        Ray shadowray = Ray(hit.hitPos + 0.001 * hit.hitNormal, nee);
 
         Hit hit2;
-        bool shadow_hit = accel.intersect(shadowray, hit2);
+        const bool shadow_hit = accel.intersect(shadowray, hit2);
 
-        Vec3 b = normalize(a - Vec3(0, 3, 0));
         double k = (a - hit.hitPos).length();
         double m = (hit2.hitPos - hit.hitPos).length();
         // std::cout << k - m << std::endl;
 
         if (shadow_hit && std::abs(k - m) < 1e-3) {
-          double cos2 = std::abs(dot(nee, b));  ///(nee.length()*b.length());
+          double cos2 =
+              std::abs(dot(nee, hit2.hitNormal));  ///(nee.length()*b.length());
           double pdf_area = 1 / hit2.hitarea;
-          double cos3 = std::abs(dot(nee, hit.hitNormal));
-          double pdf_solid = (cos3 * cos2) / (k * k);
+          // double cos3 = std::abs(dot(nee, hit.hitNormal));
+          double pdf_solid = (k * k) / cos2 * pdf_area;
           // std::cout << pdf_solid << std::endl;
           auto hitLight2 = hit2.hitSphere->light;
-          col =
-              col + throughput * brdf * pdf_solid * hitLight2->Le() / pdf_area;
-          // break;
-        } else {
-          break;
+          col = col + throughput * brdf * hitLight2->Le() / pdf_solid;
         }
       }
       throughput = throughput * brdf * cos / pdf;
-      ray = Ray(hit.hitPos + 0.01 * hit.hitNormal, wi);
+      ray = Ray(hit.hitPos + 0.001 * hit.hitNormal, wi);
       //+ 0.001 * hit.hitNormal,
       // std::cout<<ray.direction<<std::endl;
     } else {
       col = col + throughput * sky.getRadiance(ray);
-      break;
-    }
-
-    if (rnd() < ROULETTE) {
-      throughput = throughput / ROULETTE;
-    } else {
-      break;
+      return col;
     }
   }
   return col;
@@ -162,10 +164,11 @@ int main() {
   // std::cout<<accel.shapes.size() << std::endl;
   double screen_height = 2.0;
   double pixel_size = screen_height / img.height;
-#pragma omp　parallel for
-  for (int k = 0; k < N; k++) {
-    for (int i = 0; i < img.width; i++) {
-      for (int j = 0; j < img.height; j++) {
+
+  for (int i = 0; i < img.width; i++) {
+#pragma omp parallel for schedule(dynamic, 1)
+    for (int j = 0; j < img.height; j++) {
+      for (int k = 0; k < N; k++) {
         double u = screen_height * (2 * i - img.width) / (2 * img.height) +
                    screen_height * rnd() / img.height;
         double v = screen_height * (2 * j - img.height) / (2 * img.height) +
@@ -180,8 +183,9 @@ int main() {
             img.getPixel(i, j) + 1.0 / N * color);  // kでまわして平均をとる
       }
     }
-    std::cout << progressbar(k, N) << " " << percentage(k, N) << "\r"
-              << std::flush;
+
+    std::cout << progressbar(i, img.width) << " " << percentage(i, img.width)
+              << "\r" << std::flush;
   }
 
   img.gamma_correction();
