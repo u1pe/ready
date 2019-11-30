@@ -140,7 +140,7 @@ Vec3 radiancenormal(Vec3& col) {
 }*/
 
 int main() {
-  const int N = 50;
+  const int N = 300;
   Image img(600, 400);
   PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));
@@ -162,10 +162,11 @@ int main() {
   // std::cout<<accel.shapes.size() << std::endl;
   double screen_height = 2.0;
   double pixel_size = screen_height / img.height;
-#pragma omp　parallel for
-  for (int k = 0; k < N; k++) {
-    for (int i = 0; i < img.width; i++) {
-      for (int j = 0; j < img.height; j++) {
+
+  for (int i = 0; i < img.width; i++) {
+#pragma omp parallel for
+    for (int j = 0; j < img.height; j++) {
+      for (int k = 0; k < N; k++) {
         double u = screen_height * (2 * i - img.width) / (2 * img.height) +
                    screen_height * rnd() / img.height;
         double v = screen_height * (2 * j - img.height) / (2 * img.height) +
@@ -180,8 +181,8 @@ int main() {
             img.getPixel(i, j) + 1.0 / N * color);  // kでまわして平均をとる
       }
     }
-    std::cout << progressbar(k, N) << " " << percentage(k, N) << "\r"
-              << std::flush;
+    std::cout << progressbar(i, img.width) << " " << percentage(i, img.width)
+              << "\r" << std::flush;
   }
 
   img.gamma_correction();

@@ -75,12 +75,14 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
           double cos2 =
               std::abs(dot(nee, hit2.hitNormal));  ///(nee.length()*b.length());
           double pdf_area = 1 / hit2.hitarea;
-          // double cos3 = std::abs(dot(nee, hit.hitNormal));
+          double cos3 = std::abs(dot(nee, hit.hitNormal));
           double pdf_solid = (k * k) / cos2 * pdf_area;
           // std::cout << pdf_solid << std::endl;
           auto hitLight2 = hit2.hitSphere->light;
           col = col + throughput * brdf * hitLight2->Le() / pdf_solid;
         }
+      } else {
+        return col;
       }
       throughput = throughput * brdf * cos / pdf;
       ray = Ray(hit.hitPos + 0.001 * hit.hitNormal, wi);
@@ -142,7 +144,7 @@ Vec3 radiancenormal(Vec3& col) {
 }*/
 
 int main() {
-  const int N = 1000;
+  const int N = 100;
   Image img(600, 400);
   PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));

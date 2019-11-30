@@ -6,3 +6,4 @@ path_tracing2.cpp
 pathtracing_3.cpp
 a.out
 *.png
+stb
