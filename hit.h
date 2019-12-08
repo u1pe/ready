@@ -8,9 +8,11 @@ class Hit {
   double t;
   Vec3 hitPos;
   Vec3 hitNormal;
+  double u;
+  double v;
   const Shape* hitSphere;
   double hitarea;
-
+  
   Hit() {
     t = 1000000;
     hitSphere = nullptr;

@@ -47,6 +47,11 @@ class Diffuse : public Material {
 
 double cosTheta(const Vec3& v) { return v.y; }
 double absCosTheta(const Vec3& v) { return std::abs(v.y); }
+double fresnel(const Vec3& v, const Vec3& n, double ior1, double ior2) {
+  double f0 = std::pow((ior1 - ior2) / (ior1 + ior2), 2.0);
+  double cos = absCosTheta(v);
+  return f0 + (1 - f0) * std::pow(1 - cos, 5.0);
+}
 
 bool refract(const Vec3& wi, const Vec3& n, Vec3& wt, double ior1,
              double ior2) {
@@ -104,9 +109,7 @@ class Glass : public Material {
 
       pdf = fr;
 
-      Vec3 ret = pdf / absCosTheta(wi) * Vec3(1, 1, 1);
-
-      return ret;
+      return fr / absCosTheta(wi) * Vec3(1, 1, 1);
 
     }
 
@@ -114,15 +117,15 @@ class Glass : public Material {
       if (refract(wo, normal, wi, n1, n2)) {
         pdf = 1 - fr;
 
-        Vec3 ret2 =
-            std::pow(n1 / n2, 2.0) * pdf / absCosTheta(wi) * Vec3(1, 1, 1);
-        return ret2;
+        return std::pow(n1 / n2, 2.0) * (1 - fr) / absCosTheta(wi) *
+               Vec3(1, 1, 1);
+        ;
       } else {
         wi = reflect(wo, normal);
 
         pdf = 1 - fr;
 
-        return pdf / absCosTheta(wi) * Vec3(1, 1, 1);
+        return (1 - fr) / absCosTheta(wi) * Vec3(1, 1, 1);
       }
     }
   };
