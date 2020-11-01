@@ -29,6 +29,7 @@ void MakeAABB(const std::vector<std::shared_ptr<Shape>>& shapes, AABB& aabb) {
       aabb.max[j] = std::max(aabb.max[j], shapes[i]->aabb.max[j]);
     }
   }
+  std::cout << "ka" << std::endl;
 }
 void SplitObjects(const AABB& aabb, std::vector<std::shared_ptr<Shape>>& shapes,
                   std::vector<std::shared_ptr<Shape>>& lshapes,
@@ -53,7 +54,7 @@ void SplitObjects(const AABB& aabb, std::vector<std::shared_ptr<Shape>>& shapes,
       bestsplit_index = k - shapes.begin();
     }
   }
-
+  std::cout << "ki" << std::endl;
   lshapes = std::vector<std::shared_ptr<Shape>>(
       bestsplit_array.begin(), bestsplit_array.begin() + bestsplit_index);
   rshapes = std::vector<std::shared_ptr<Shape>>(
@@ -62,7 +63,7 @@ void SplitObjects(const AABB& aabb, std::vector<std::shared_ptr<Shape>>& shapes,
 
 void ConstructBVH(Node** tree, std::vector<std::shared_ptr<Shape>>& shapes) {
   assert(shapes.size() > 0);
-
+  std::cout << "kauoi" << std::endl;
   Node* pNode = new Node;
   *tree = pNode;
 
@@ -76,13 +77,15 @@ void ConstructBVH(Node** tree, std::vector<std::shared_ptr<Shape>>& shapes) {
 
     std::vector<std::shared_ptr<Shape>> rshapes, lshapes;
     SplitObjects(pNode->aabb, shapes, lshapes, rshapes);
-
+    std::cout << lshapes.size() << std::endl;
+    std::cout << rshapes.size() << std::endl;
     if (lshapes.size() == 0 || rshapes.size() == 0) {
       pNode->node_state = 0;
       pNode->objects = shapes;
+
       return;
     }
-
+    std::cout << "kauoi" << std::endl;
     ConstructBVH(&(pNode->left), lshapes);
     ConstructBVH(&(pNode->right), rshapes);
   }

@@ -8,3 +8,8 @@ a.out
 stb
 stb*.h
 Paper*
+*.hdr
+neetest.cpp
+*.obj
+*.blend
+*.mtl

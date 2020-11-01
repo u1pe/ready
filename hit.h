@@ -12,7 +12,7 @@ class Hit {
   double v;
   const Shape* hitSphere;
   double hitarea;
-  
+
   Hit() {
     t = 1000000;
     hitSphere = nullptr;

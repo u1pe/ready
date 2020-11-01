@@ -34,7 +34,7 @@ class PinholeCamera2 : public Camera2 {
 };
 class ThinLensCamera2 : public Camera2 {
  public:
-  double lensDistance;
+   double lensDistance;
   Vec3 focusPoint;
   double objectDistance;
   double focalLength;
@@ -42,19 +42,20 @@ class ThinLensCamera2 : public Camera2 {
   double lensRadius;
   Vec3 lensCenterPos;
 
-  ThinLensCamera2(const Vec3& camPos, const Vec3& camForward,
-                  double lensDistance, const Vec3& focusPoint, double Fnumber)
-      : Camera2(camPos, camForward),
-        lensDistance(lensDistance),
-        focusPoint(focusPoint),
-        Fnumber(Fnumber) {
+  ThinLensCamera2(const Vec3& _camPos, const Vec3& _camForward,
+                  double _lensDistance, const Vec3& _focusPoint,
+                  double _Fnumber)
+      : Camera2(_camPos, _camForward),
+        lensDistance(_lensDistance),
+        focusPoint(_focusPoint),
+        Fnumber(_Fnumber) {
     objectDistance = (focusPoint - camPos).length() - lensDistance;
     focalLength = 1.0 / (1.0 / lensDistance + 1.0 / objectDistance);
     lensRadius = 0.5 * focalLength / Fnumber;
     lensCenterPos = camPos + lensDistance * camForward;
   };
 
-  Ray getRay(double u, double v, double& w) const {
+  Ray getRay(double u, double v) const {
     //センサー面上の位置
     Vec3 sensorPos = camPos + u * camRight + v * camUp;
     //レンズ上の位置をサンプリング
@@ -74,8 +75,9 @@ class ThinLensCamera2 : public Camera2 {
     //センサー面からレンズ面までの距離の二乗
     double sensorLensDistance2 = (lensPos - sensorPos).length2();
     //寄与係数の計算
-    w = lensDistance * lensDistance *
-        std::pow(dot(camForward, sensorToLensPos), 2.0) / sensorLensDistance2;
+    // double w = lensDistance * lensDistance *
+    //            std::pow(dot(camForward, sensorToLensPos), 2.0) /
+    //            sensorLensDistance2;
 
     Vec3 rayDir = normalize(objectPos - lensPos);
     return Ray(lensPos, rayDir);

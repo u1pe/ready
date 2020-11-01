@@ -1,7 +1,7 @@
 #include <omp.h>  //並列化計算
 #include <iostream>
 #include <vector>
-#include "accel.h"
+#include "accel2.h"
 #include "camera2.h"
 #include "hit.h"
 #include "image.h"
@@ -17,11 +17,11 @@
 //ガンマ補正
 const int MAX_DEPTH = 100;
 const double ROULETTE = 0.99;
-Accel accel;  //グローバルに定義する必要がある
+Accel2 accel;  //グローバルに定義する必要がある
 
 Simplesky sky;
 
-Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
+Vec3 radianceNEE(const Ray& init_ray, const Accel2& accel, const Sky& sky,
                  /*const std::shared_ptr<Light>& lights,*/ int depth = 0) {
   Vec3 col;
   Vec3 throughput(1, 1, 1);
@@ -81,8 +81,6 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
           auto hitLight2 = hit2.hitSphere->light;
           col = col + throughput * brdf * hitLight2->Le() / pdf_solid;
         }
-      } else {
-        return col;
       }
       throughput = throughput * brdf * cos / pdf;
       ray = Ray(hit.hitPos + 0.001 * hit.hitNormal, wi);
@@ -93,7 +91,7 @@ Vec3 radianceNEE(const Ray& init_ray, const Accel& accel, const Sky& sky,
       return col;
     }
   }
-  return col;
+  return sky.getRadiance(ray);
 }
 
 /*Vec3 radiance(const Ray& init_ray, const Accel& accel, const Sky& sky,
@@ -144,8 +142,8 @@ Vec3 radiancenormal(Vec3& col) {
 }*/
 
 int main() {
-  const int N = 100;
-  Image img(600, 400);
+  const int N = 200;
+  Image img(2102, 1500);
   PinholeCamera2 cam(Vec3(0, 0, 3), Vec3(0, 0, -1), 1);
   auto mat1 = std::make_shared<Diffuse>(Vec3(0.8, 0.2, 0.8));
   auto mat2 = std::make_shared<Diffuse>(Vec3(0.8, 0.8, 0.2));
@@ -156,11 +154,11 @@ int main() {
   auto light2 = std::make_shared<Light>(Vec3(0, 0, 0));
 
   accel.add(std::make_shared<Sphere>(Vec3(0, 3, 0), 1, mat3, light1));
-  accel.add(std::make_shared<Sphere>(Vec3(0, 0, 0), 1, mat2, light2));
-  accel.add(std::make_shared<Sphere>(Vec3(10003, 0, 0), 10000, mat1, light2));
+  accel.add(std::make_shared<Sphere>(Vec3(0, 0, 0), 1, mat1, light2));
+  accel.add(std::make_shared<Sphere>(Vec3(10003, 0, 0), 10000, mat2, light2));
   accel.add(std::make_shared<Sphere>(Vec3(-10003, 0, 0), 10000, mat4, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, 10003, 0), 10000, mat3, light2));
-  accel.add(std::make_shared<Sphere>(Vec3(0, 0, -10003), 10000, mat3, light2));
+  accel.add(std::make_shared<Sphere>(Vec3(0, 0, -10003), 10000, mat4, light2));
   accel.add(std::make_shared<Sphere>(Vec3(0, -10001, 0), 10000, mat3,
                                      light2));  //地面を作るイメージ！
   // std::cout<<accel.shapes.size() << std::endl;

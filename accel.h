@@ -13,13 +13,10 @@ bool ray_vs_aabb(const Ray& ray, const AABB& aabb) {
   double t_min = std::numeric_limits<double>::min();
 
   double org[] = {ray.origin.x, ray.origin.y, ray.origin.z};
-  // vecを配列で扱えるようにしたいね...
   double dir[] = {ray.direction.x, ray.direction.y, ray.direction.z};
-
   for (int i = 0; i < 3; i++) {
     double t1 = (aabb.min[i] - org[i]) / dir[i];
     double t2 = (aabb.max[i] - org[i]) / dir[i];
-
     double t_near = std::min(t1, t2);
     double t_far = std::max(t1, t2);
 
@@ -33,26 +30,23 @@ bool ray_vs_aabb(const Ray& ray, const AABB& aabb) {
 class Accel {
  public:
   std::vector<std::shared_ptr<Shape> > shapes;  //ポインタの配列
-  std::vector<std::shared_ptr<Light> > lights;
+  // std::vector<std::shared_ptr<Light> > lights;
   Accel(){};  //デフォルトコンストラクタ
 
   void add(std::shared_ptr<Shape> p) {
     shapes.push_back(p);  //配列の後ろに入れていく
   };
-  void add2(std::shared_ptr<Light> l) {
-    lights.push_back(l);  //配列の後ろに入れていく
-  };
+  // void add2(std::shared_ptr<Light> l) {
+  //   lights.push_back(l);  //配列の後ろに入れていく
+  // };
 
   bool intersect(const Ray& ray, const Node* node, Hit& hit) const {
-    // AABBとRayの交差判定
-
     bool is_hit_aabb = ray_vs_aabb(ray, node->aabb);
-
-    if (!is_hit_aabb) {  // AABBに当たらなかった
+    // std::cout << is_hit_aabb << std::endl;
+    if (!is_hit_aabb) {
       return false;
-    } else {  // AABBに当たった
-
-      if (node->node_state == 0) {  //葉ノード
+    } else {
+      if (node->node_state == 0) {
         Hit hit_each;
         bool is_hit = false;
         for (auto& p : node->objects) {
@@ -64,14 +58,13 @@ class Accel {
           }
         }
         return is_hit;
-      } else {  //中間ノード
-
+      } else {
         bool is_hit1 = intersect(ray, node->left, hit);
         bool is_hit2 = intersect(ray, node->right, hit);
 
         return is_hit2 || is_hit1;
       }
     }
-  };
+  }
 };
 #endif
