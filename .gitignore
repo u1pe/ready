@@ -3,7 +3,7 @@ pictures/
 *.ppm
 path_tracing.cpp
 pathtracing_3.cpp
-a.out
+*.out
 *.png
 stb
 stb*.h
