@@ -13,4 +13,4 @@ neetest.cpp
 *.obj
 *.blend
 *.mtl
-*.DS_Store
+.DS_Store
